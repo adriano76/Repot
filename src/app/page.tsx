@@ -80,7 +80,7 @@ export default function Home() {
   const [postVotes, setPostVotes] = useState<Record<string, 'like' | 'dislike'>>({});
   const [commentVotes, setCommentVotes] = useState<Record<string, 'like' | 'dislike'>>({});
 
-  // 1. Carrega sessao do utilizador conectado
+  // 1. Carrega sessao do usuario conectado
   useEffect(() => {
     async function getUserSession() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -131,7 +131,7 @@ export default function Home() {
     };
   }, []);
 
-  // 2. Carrega votos locais apos recarregamento
+  // 2. Carrega votos locais pos-F5
   useEffect(() => {
     try {
       const savedPostVotes = localStorage.getItem('repot_post_votes');
@@ -1041,7 +1041,8 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {replyTarget?.postId === post.id && replyTarget.commentId === null && (
+                    {/* Verificação segura contra null */}
+                    {replyTarget && replyTarget.postId === post.id && replyTarget.commentId === null && (
                       <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
                         {currentUser ? (
                           <div className="flex items-center gap-2 text-xs text-neutral-400 pb-1">
