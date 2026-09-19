@@ -243,8 +243,11 @@ export default function TopicoDetalhe() {
         </h1>
 
         <p className="text-xs text-neutral-400 mb-5" suppressHydrationWarning>
-          Por <span className="text-neutral-200 font-medium">{post.author_name || 'Anônimo'}</span> em{' '}
-          {new Date(post.created_at).toLocaleDateString('pt-BR')}
+          Por{' '}
+          <span className="text-neutral-200 font-medium">
+            {post.author_name || 'Anônimo'}
+          </span>{' '}
+          em {new Date(post.created_at).toLocaleDateString('pt-BR')}
         </p>
 
         <div className="text-neutral-200 text-base leading-relaxed whitespace-pre-line mb-6">
@@ -314,7 +317,10 @@ export default function TopicoDetalhe() {
                     {comm.author_name || 'Anônimo'}
                   </span>
 
-                  <span className="text-[11px] text-neutral-400" suppressHydrationWarning>
+                  <span
+                    className="text-[11px] text-neutral-400"
+                    suppressHydrationWarning
+                  >
                     {new Date(comm.created_at).toLocaleTimeString('pt-BR', {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -372,7 +378,9 @@ export default function TopicoDetalhe() {
           onSubmit={handleCommentSubmit}
           className="space-y-4 p-5 rounded-xl bg-neutral-900 border border-neutral-700 shadow-lg"
         >
-          <h3 className="text-sm font-bold text-white">Deixe sua resposta</h3>
+          <h3 className="text-sm font-bold text-white">
+            Deixe sua resposta
+          </h3>
 
           <div>
             <input
