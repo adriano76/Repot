@@ -68,19 +68,19 @@ export default function Home() {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Edição de Tópico (Post)
+  // Edicao de Topico (Post)
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editPostTitle, setEditPostTitle] = useState('');
   const [editPostContent, setEditPostContent] = useState('');
 
-  // Edição de Comentário / Sub-resposta
+  // Edicao de Comentario / Sub-resposta
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState('');
 
   const [postVotes, setPostVotes] = useState<Record<string, 'like' | 'dislike'>>({});
   const [commentVotes, setCommentVotes] = useState<Record<string, 'like' | 'dislike'>>({});
 
-  // 1. Carrega sessão do usuário conectado
+  // 1. Carrega sessao do usuario conectado
   useEffect(() => {
     async function getUserSession() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -131,7 +131,7 @@ export default function Home() {
     };
   }, []);
 
-  // 2. Carrega votos locais pós-F5
+  // 2. Carrega votos locais pos-F5
   useEffect(() => {
     try {
       const savedPostVotes = localStorage.getItem('repot_post_votes');
@@ -182,7 +182,7 @@ export default function Home() {
         .order('created_at', { ascending: true });
 
       if (commErr) {
-        console.error('Erro ao obter comentários:', commErr);
+        console.error('Erro ao obter comentarios:', commErr);
       }
 
       const mergedPosts = (postsData || []).map((p) => ({
@@ -211,7 +211,6 @@ export default function Home() {
     loadFeed();
   }, [loadFeed]);
 
-  // Regra estrita: só pode editar/excluir quem estiver LOGADO e for o AUTOR do conteúdo
   const isAuthorLoggedIn = (authorName: string) => {
     if (!currentUser || !currentProfile?.username) return false;
     const cleanAuthor = (authorName || '').trim().replace(/^@/, '').toLowerCase();
@@ -221,17 +220,17 @@ export default function Home() {
 
   // EXCLUIR POST
   async function handleDeletePost(postId: string) {
-    if (!confirm('Deseja realmente excluir este tópico e todas as suas respostas?')) return;
+    if (!confirm('Deseja realmente excluir este topico e todas as suas respostas?')) return;
 
     const { error } = await supabase.from('posts').delete().eq('id', postId);
     if (!error) {
       setPosts((prev) => prev.filter((p) => p.id !== postId));
     } else {
-      alert('Erro ao excluir publicação.');
+      alert('Erro ao excluir publicacao.');
     }
   }
 
-  // SALVAR EDIÇÃO DO POST
+  // SALVAR EDICAO DO POST
   async function handleSaveEditPost(postId: string) {
     if (!editPostTitle.trim() || !editPostContent.trim()) return;
 
@@ -248,11 +247,11 @@ export default function Home() {
       );
       setEditingPostId(null);
     } else {
-      alert('Erro ao salvar alterações no tópico.');
+      alert('Erro ao salvar alteracoes no topico.');
     }
   }
 
-  // EXCLUIR COMENTÁRIO / SUB-RESPOSTA
+  // EXCLUIR COMENTARIO / SUB-RESPOSTA
   async function handleDeleteComment(postId: string, commentId: string) {
     if (!confirm('Deseja realmente excluir esta resposta?')) return;
 
@@ -272,7 +271,7 @@ export default function Home() {
     }
   }
 
-  // SALVAR EDIÇÃO DO COMENTÁRIO
+  // SALVAR EDICAO DO COMENTARIO
   async function handleSaveEditComment(postId: string, commentId: string) {
     if (!editCommentContent.trim()) return;
 
@@ -428,7 +427,6 @@ export default function Home() {
     await supabase.from('comments').update({ likes: finalLikes, dislikes: finalDislikes }).eq('id', commentId);
   }
 
-  // Compartilhar disponível para qualquer um
   async function handleShare(urlParam: string, title: string) {
     const shareUrl = `${window.location.origin}${urlParam}`;
     if (typeof window !== 'undefined' && navigator.share) {
@@ -523,7 +521,6 @@ export default function Home() {
     );
   }
 
-  // Renderizador recursivo com verificação de autor logado
   function renderComments(
     postId: string,
     allComments: CommentItem[],
@@ -568,7 +565,6 @@ export default function Home() {
                     <ClientDate dateString={c.created_at} />
                   </span>
 
-                  {/* SÓ APARECE SE FOR O AUTOR CONECTADO */}
                   {userCanEdit && !isEditing && (
                     <div className="flex items-center gap-2 ml-auto text-[11px] text-neutral-400">
                       <button
@@ -595,7 +591,6 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Caixa de Edição Inline */}
                 {isEditing ? (
                   <div className="my-2 p-2.5 bg-neutral-950 border border-amber-600/40 rounded-lg space-y-2">
                     <textarea
@@ -627,7 +622,6 @@ export default function Home() {
                   </p>
                 )}
 
-                {/* Barra de Reações do Comentário */}
                 <div className="flex items-center gap-3.5 text-neutral-400 text-xs">
                   <button
                     type="button"
@@ -676,7 +670,6 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Caixa Inline de Resposta */}
                 {replyTarget?.postId === postId && replyTarget?.commentId === c.id && (
                   <div className="mt-3 p-3 bg-neutral-950 rounded-lg border border-neutral-800 space-y-2">
                     {currentUser ? (
@@ -922,7 +915,6 @@ export default function Home() {
                           <ClientDate dateString={post.created_at} />
                         </span>
 
-                        {/* SÓ APARECE SE FOR O AUTOR DO POST E ESTIVER LOGADO */}
                         {userCanEditPost && !isEditingPost && (
                           <div className="flex items-center gap-2 text-xs text-neutral-400">
                             <button
@@ -951,7 +943,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Exibição normal ou Formulário de Edição do Tópico */}
                     {isEditingPost ? (
                       <div className="space-y-3 my-3 p-4 bg-neutral-950 border border-amber-600/40 rounded-xl">
                         <div>
@@ -998,7 +989,6 @@ export default function Home() {
                       </>
                     )}
 
-                    {/* Barra de Reações do Tópico */}
                     <div className="flex flex-wrap items-center gap-2 pt-4 mt-5 border-t border-neutral-800">
                       <button
                         type="button"
@@ -1041,7 +1031,6 @@ export default function Home() {
                         <span>{totalComments > 0 ? `Respostas (${totalComments})` : 'Responder'}</span>
                       </button>
 
-                      {/* COMPARTILHAR SEMPRE ABERTO PARA TODOS */}
                       <button
                         type="button"
                         onClick={() => handleShare(`/topico/${post.id}`, post.title)}
@@ -1052,7 +1041,6 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* Formulário para Responder ao Tópico */}
                     {replyTarget?.postId === post.id && replyTarget.commentId === null && (
                       <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
                         {currentUser ? (
