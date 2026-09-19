@@ -218,6 +218,7 @@ export default function Home() {
     return cleanAuthor !== '' && cleanAuthor === cleanCurrent;
   };
 
+  // EXCLUIR POST
   async function handleDeletePost(postId: string) {
     if (!confirm('Deseja realmente excluir este topico e todas as suas respostas?')) return;
 
@@ -229,6 +230,7 @@ export default function Home() {
     }
   }
 
+  // SALVAR EDICAO DO POST
   async function handleSaveEditPost(postId: string) {
     if (!editPostTitle.trim() || !editPostContent.trim()) return;
 
@@ -249,6 +251,7 @@ export default function Home() {
     }
   }
 
+  // EXCLUIR COMENTARIO / SUB-RESPOSTA
   async function handleDeleteComment(postId: string, commentId: string) {
     if (!confirm('Deseja realmente excluir esta resposta?')) return;
 
@@ -268,6 +271,7 @@ export default function Home() {
     }
   }
 
+  // SALVAR EDICAO DO COMENTARIO
   async function handleSaveEditComment(postId: string, commentId: string) {
     if (!editCommentContent.trim()) return;
 
@@ -536,7 +540,6 @@ export default function Home() {
           const isHidden = hiddenReplies[c.id] === true;
           const isEditing = editingCommentId === c.id;
           const userCanEdit = isAuthorLoggedIn(c.author_name);
-          const isReplyingToThisComment = replyTarget?.postId === postId && replyTarget?.commentId === c.id;
 
           return (
             <div key={c.id} className="flex gap-3 group">
@@ -667,7 +670,7 @@ export default function Home() {
                   </button>
                 </div>
 
-                {isReplyingToThisComment && (
+                {replyTarget?.postId === postId && replyTarget?.commentId === c.id && (
                   <div className="mt-3 p-3 bg-neutral-950 rounded-lg border border-neutral-800 space-y-2">
                     {currentUser ? (
                       <div className="flex items-center gap-2 text-xs text-neutral-400 pb-1">
@@ -899,7 +902,6 @@ export default function Home() {
                 const totalComments = post.comments?.length || 0;
                 const isEditingPost = editingPostId === post.id;
                 const userCanEditPost = isAuthorLoggedIn(post.author_name);
-                const isReplyingToThisPost = replyTarget?.postId === post.id && replyTarget?.commentId === null;
 
                 return (
                   <article key={post.id} className="p-6 rounded-2xl bg-neutral-900/90 border border-neutral-800 shadow-md">
@@ -1039,7 +1041,8 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {isReplyingToThisPost && (
+                    {/* Verificação segura contra null */}
+                    {replyTarget && replyTarget.postId === post.id && replyTarget.commentId === null && (
                       <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
                         {currentUser ? (
                           <div className="flex items-center gap-2 text-xs text-neutral-400 pb-1">
