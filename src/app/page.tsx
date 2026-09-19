@@ -56,7 +56,6 @@ export default function Home() {
   const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
   const [hiddenReplies, setHiddenReplies] = useState<Record<string, boolean>>({});
 
-  // Resposta
   const [replyTarget, setReplyTarget] = useState<{
     postId: string;
     commentId: string | null;
@@ -68,19 +67,16 @@ export default function Home() {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Edicao de Topico (Post)
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [editPostTitle, setEditPostTitle] = useState('');
   const [editPostContent, setEditPostContent] = useState('');
 
-  // Edicao de Comentario / Sub-resposta
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState('');
 
   const [postVotes, setPostVotes] = useState<Record<string, 'like' | 'dislike'>>({});
   const [commentVotes, setCommentVotes] = useState<Record<string, 'like' | 'dislike'>>({});
 
-  // 1. Carrega sessao do usuario conectado
   useEffect(() => {
     async function getUserSession() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -131,7 +127,6 @@ export default function Home() {
     };
   }, []);
 
-  // 2. Carrega votos locais pos-F5
   useEffect(() => {
     try {
       const savedPostVotes = localStorage.getItem('repot_post_votes');
@@ -161,7 +156,6 @@ export default function Home() {
     }
   };
 
-  // 3. Carrega o feed
   const loadFeed = useCallback(async () => {
     try {
       const { data: commData } = await supabase.from('communities').select('*');
@@ -218,7 +212,6 @@ export default function Home() {
     return cleanAuthor !== '' && cleanAuthor === cleanCurrent;
   };
 
-  // EXCLUIR POST
   async function handleDeletePost(postId: string) {
     if (!confirm('Deseja realmente excluir este topico e todas as suas respostas?')) return;
 
@@ -230,7 +223,6 @@ export default function Home() {
     }
   }
 
-  // SALVAR EDICAO DO POST
   async function handleSaveEditPost(postId: string) {
     if (!editPostTitle.trim() || !editPostContent.trim()) return;
 
@@ -251,7 +243,6 @@ export default function Home() {
     }
   }
 
-  // EXCLUIR COMENTARIO / SUB-RESPOSTA
   async function handleDeleteComment(postId: string, commentId: string) {
     if (!confirm('Deseja realmente excluir esta resposta?')) return;
 
@@ -271,7 +262,6 @@ export default function Home() {
     }
   }
 
-  // SALVAR EDICAO DO COMENTARIO
   async function handleSaveEditComment(postId: string, commentId: string) {
     if (!editCommentContent.trim()) return;
 
@@ -540,6 +530,8 @@ export default function Home() {
           const isHidden = hiddenReplies[c.id] === true;
           const isEditing = editingCommentId === c.id;
           const userCanEdit = isAuthorLoggedIn(c.author_name);
+          
+          const isReplyingToThisComment = replyTarget?.postId === postId && replyTarget?.commentId === c.id;
 
           return (
             <div key={c.id} className="flex gap-3 group">
@@ -670,7 +662,7 @@ export default function Home() {
                   </button>
                 </div>
 
-                {replyTarget?.postId === postId && replyTarget?.commentId === c.id && (
+                {isReplyingToThisComment && (
                   <div className="mt-3 p-3 bg-neutral-950 rounded-lg border border-neutral-800 space-y-2">
                     {currentUser ? (
                       <div className="flex items-center gap-2 text-xs text-neutral-400 pb-1">
@@ -902,6 +894,8 @@ export default function Home() {
                 const totalComments = post.comments?.length || 0;
                 const isEditingPost = editingPostId === post.id;
                 const userCanEditPost = isAuthorLoggedIn(post.author_name);
+                
+                const isReplyingToThisPost = replyTarget?.postId === post.id && replyTarget?.commentId === null;
 
                 return (
                   <article key={post.id} className="p-6 rounded-2xl bg-neutral-900/90 border border-neutral-800 shadow-md">
@@ -1041,8 +1035,7 @@ export default function Home() {
                       </button>
                     </div>
 
-                    {/* Verificação segura contra null */}
-                    {replyTarget && replyTarget.postId === post.id && replyTarget.commentId === null && (
+                    {isReplyingToThisPost && (
                       <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
                         {currentUser ? (
                           <div className="flex items-center gap-2 text-xs text-neutral-400 pb-1">
