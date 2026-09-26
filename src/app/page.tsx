@@ -31,7 +31,7 @@ const EMOJI_OPTIONS = [
 
 // ============================================================================
 // COMPONENTE: ClientDate
-// Previne erros de "Hidratação" no Next.js garantindo que a data seja 
+// Função: Previne erros de "Hidratação" no Next.js garantindo que a data seja 
 // formatada de acordo com o fuso horário do utilizador apenas no navegador.
 // ============================================================================
 function ClientDate({ dateString }: { dateString: string }) {
@@ -103,8 +103,8 @@ export default function Home() {
   const [commentVotes, setCommentVotes] = useState<Record<string, 'like' | 'dislike'>>({});
 
   // ============================================================================
-  // EFEITO 1: AUTENTICAÇÃO
-  // Roda uma vez ao carregar a página para verificar se alguém está logado
+  // FUNÇÃO DE EFEITO: Monitoramento de Autenticação
+  // Função: Roda uma vez ao carregar a página para verificar se alguém está logado
   // e fica "ouvindo" caso o usuário faça login ou logout em outra aba.
   // ============================================================================
   useEffect(() => {
@@ -160,8 +160,9 @@ export default function Home() {
   }, []);
 
   // ============================================================================
-  // EFEITO 2: RECUPERAÇÃO DE VOTOS LOCAIS
-  // Recupera os votos (like/dislike) que o usuário deu anteriormente, salvos no navegador (localStorage)
+  // FUNÇÃO DE EFEITO: Recuperação de Votos Locais
+  // Função: Recupera os votos (like/dislike) que o usuário deu anteriormente, 
+  // salvos na memória do navegador (localStorage) para manter os botões coloridos.
   // ============================================================================
   useEffect(() => {
     try {
@@ -172,7 +173,11 @@ export default function Home() {
     } catch (_) {}
   }, []);
 
-  // Função auxiliar para salvar votos no navegador
+  // ============================================================================
+  // FUNÇÃO: saveVoteLocally
+  // Função: Salva a curtida ou descurtida no navegador do usuário.
+  // Isso evita que o usuário vote infinitamente no mesmo post atualizando a página.
+  // ============================================================================
   const saveVoteLocally = (type: 'post' | 'comment', id: string, vote: 'like' | 'dislike') => {
     if (type === 'post') {
       setPostVotes((prev) => {
@@ -194,9 +199,10 @@ export default function Home() {
   };
 
   // ============================================================================
-  // FUNÇÃO: Carregar Feed Principal
-  // Busca as comunidades, os posts e os comentários no banco de dados,
-  // juntando tudo num único pacote de informações.
+  // FUNÇÃO: loadFeed
+  // Função: Busca todas as comunidades, tópicos e respostas no banco de dados
+  // do Supabase. Depois de baixar tudo, ela agrupa os comentários dentro
+  // dos seus respectivos tópicos para facilitar a exibição na tela.
   // ============================================================================
   const loadFeed = useCallback(async () => {
     try {
@@ -249,11 +255,12 @@ export default function Home() {
     loadFeed();
   }, [loadFeed]);
 
-  // ============================================================================
-  // FUNÇÕES DE AÇÃO (Deletar, Editar, Curtir, etc.)
-  // ============================================================================
 
-  // Verifica se quem está acessando é o dono original do post/comentário
+  // ============================================================================
+  // FUNÇÃO: isAuthorLoggedIn
+  // Função: Verifica se o usuário que está logado no momento é o dono daquele
+  // post ou comentário. É usada para decidir se deve exibir os botões Editar/Excluir.
+  // ============================================================================
   const isAuthorLoggedIn = (authorName: string) => {
     if (!currentUser || !currentProfile?.username) return false;
     const cleanAuthor = (authorName || '').trim().replace(/^@/, '').toLowerCase();
@@ -261,16 +268,26 @@ export default function Home() {
     return cleanAuthor !== '' && cleanAuthor === cleanCurrent;
   };
 
+  // ============================================================================
+  // FUNÇÃO: handleDeletePost
+  // Função: Apaga um tópico principal do banco de dados (e as respostas vinculadas a ele).
+  // Se apagar no banco com sucesso, remove o post imediatamente da tela (estado local).
+  // ============================================================================
   async function handleDeletePost(postId: string) {
     if (!confirm('Deseja realmente excluir este topico e todas as suas respostas?')) return;
     const { error } = await supabase.from('posts').delete().eq('id', postId);
     if (!error) {
-      setPosts((prev) => prev.filter((p) => p.id !== postId)); // Remove da tela instantaneamente
+      setPosts((prev) => prev.filter((p) => p.id !== postId)); 
     } else {
       alert('Erro ao excluir publicacao.');
     }
   }
 
+  // ============================================================================
+  // FUNÇÃO: handleSaveEditPost
+  // Função: Envia o novo Título e Conteúdo editados para o banco de dados.
+  // Em seguida, atualiza a lista de posts na tela sem precisar recarregar a página.
+  // ============================================================================
   async function handleSaveEditPost(postId: string) {
     if (!editPostTitle.trim() || !editPostContent.trim()) return;
     const { error } = await supabase
@@ -279,18 +296,22 @@ export default function Home() {
       .eq('id', postId);
 
     if (!error) {
-      // Atualiza a interface localmente sem precisar recarregar a página
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId ? { ...p, title: editPostTitle.trim(), content: editPostContent.trim() } : p
         )
       );
-      setEditingPostId(null); // Sai do modo edição
+      setEditingPostId(null); // Fecha as caixas de edição
     } else {
       alert('Erro ao salvar alteracoes no topico.');
     }
   }
 
+  // ============================================================================
+  // FUNÇÃO: handleDeleteComment
+  // Função: Exclui uma resposta específica do banco de dados.
+  // Navega pela lista de posts local e remove o comentário da tela.
+  // ============================================================================
   async function handleDeleteComment(postId: string, commentId: string) {
     if (!confirm('Deseja realmente excluir esta resposta?')) return;
     const { error } = await supabase.from('comments').delete().eq('id', commentId);
@@ -309,6 +330,10 @@ export default function Home() {
     }
   }
 
+  // ============================================================================
+  // FUNÇÃO: handleSaveEditComment
+  // Função: Salva a nova versão de um comentário no banco de dados e atualiza a tela.
+  // ============================================================================
   async function handleSaveEditComment(postId: string, commentId: string) {
     if (!editCommentContent.trim()) return;
     const { error } = await supabase
@@ -334,7 +359,11 @@ export default function Home() {
     }
   }
 
-  // Atualiza o Emoji de perfil do usuário
+  // ============================================================================
+  // FUNÇÃO: handleSelectEmoji
+  // Função: Atualiza a foto de perfil (avatar_url) do usuário no banco de dados
+  // da tabela profiles quando ele escolhe um emoji novo.
+  // ============================================================================
   async function handleSelectEmoji(emoji: string) {
     if (!currentUser) return;
     setSavingEmoji(true);
@@ -355,6 +384,10 @@ export default function Home() {
     }
   }
 
+  // ============================================================================
+  // FUNÇÃO: handleLogout
+  // Função: Desconecta o usuário do sistema do Supabase e limpa os dados locais.
+  // ============================================================================
   async function handleLogout() {
     await supabase.auth.signOut();
     setCurrentUser(null);
@@ -362,6 +395,10 @@ export default function Home() {
     setShowEmojiPicker(false);
   }
 
+  // ============================================================================
+  // FUNÇÃO: toggleRepliesVisibility
+  // Função: Oculta ou exibe as respostas secundárias (filhos) de um comentário.
+  // ============================================================================
   const toggleRepliesVisibility = (commentId: string) => {
     setHiddenReplies((prev) => ({
       ...prev,
@@ -370,9 +407,9 @@ export default function Home() {
   };
 
   // ============================================================================
-  // FILTRAGEM (useMemo)
-  // Calcula quais tópicos devem aparecer com base na Barra de Pesquisa ou Categoria.
-  // O 'useMemo' evita que o computador refaça essa busca atoa, melhorando o desempenho.
+  // LÓGICA DE FILTRAGEM (useMemo)
+  // Função: Calcula quais tópicos devem aparecer com base na Barra de Pesquisa 
+  // ou Categoria. O 'useMemo' evita que o computador refaça essa busca atoa.
   // ============================================================================
   const filteredPosts = useMemo(() => {
     return posts.filter((post) => {
@@ -399,7 +436,12 @@ export default function Home() {
     });
   }, [posts, searchTerm, selectedCommunity]);
 
-  // --- LÓGICA DE VOTOS OTIMISTA (Atualiza tela antes do banco) ---
+  // ============================================================================
+  // FUNÇÕES DE VOTO: handlePostLike / handlePostDislike
+  // Função: Atualiza visualmente o contador de votos instantaneamente (Otimismo)
+  // e depois envia a atualização para o banco de dados. 
+  // Garante que se o usuário der Like e depois Dislike, um é cancelado pelo outro.
+  // ============================================================================
   async function handlePostLike(postId: string) {
     if (postVotes[postId] === 'like') return;
     const post = posts.find((p) => p.id === postId);
@@ -430,6 +472,11 @@ export default function Home() {
     await supabase.from('posts').update({ likes: newLikes, dislikes: newDislikes }).eq('id', postId);
   }
 
+  // ============================================================================
+  // FUNÇÃO: handleCommentVote
+  // Função: Idêntica às funções acima, mas aplicada exclusivamente para contar 
+  // votos nos comentários secundários.
+  // ============================================================================
   async function handleCommentVote(commentId: string, type: 'like' | 'dislike') {
     if (commentVotes[commentId] === type) return;
 
@@ -473,7 +520,11 @@ export default function Home() {
     await supabase.from('comments').update({ likes: finalLikes, dislikes: finalDislikes }).eq('id', commentId);
   }
 
-  // Aciona a API nativa de compartilhamento (no celular) ou copia pro clipboard (no PC)
+  // ============================================================================
+  // FUNÇÃO: handleShare
+  // Função: Aciona a tela nativa de compartilhamento se o usuário estiver num
+  // celular. Se estiver num PC, simplesmente copia o link para a área de transferência.
+  // ============================================================================
   async function handleShare(urlParam: string, title: string) {
     const shareUrl = `${window.location.origin}${urlParam}`;
     if (typeof window !== 'undefined' && navigator.share) {
@@ -485,11 +536,15 @@ export default function Home() {
     if (typeof window !== 'undefined') {
       await navigator.clipboard.writeText(shareUrl);
       setCopiedId(urlParam);
-      setTimeout(() => setCopiedId(null), 2000);
+      setTimeout(() => setCopiedId(null), 2000); // Mostra o "Copiado!" por 2 segundos
     }
   }
 
-  // Envia um novo comentário para o banco de dados
+  // ============================================================================
+  // FUNÇÃO: handleSendReply
+  // Função: Insere um novo registro na tabela de comentários do banco de dados.
+  // O parent_id define se ele é resposta ao tópico principal ou a outro usuário.
+  // ============================================================================
   async function handleSendReply(postId: string, parentCommentId: string | null = null) {
     if (!commentText.trim()) return;
 
@@ -520,7 +575,7 @@ export default function Home() {
       if (parentCommentId) {
         setHiddenReplies((prev) => ({ ...prev, [parentCommentId]: false })); // Expande as respostas se estiverem ocultas
       }
-      loadFeed(); // Recarrega os dados para mostrar o novo comentário
+      loadFeed(); // Recarrega os dados para mostrar o novo comentário recém inserido
     } else {
       alert('Erro ao enviar resposta.');
     }
@@ -528,8 +583,9 @@ export default function Home() {
 
   // ============================================================================
   // COMPONENTE SECUNDÁRIO: Avatar
-  // Exibe a foto/emoji do usuário. Se não houver, exibe a letra inicial do nome 
-  // num círculo colorido gerado automaticamente.
+  // Função: Exibe a foto/emoji do usuário. Se não houver emoji customizado, 
+  // exibe a primeira letra do nome num círculo com uma cor gerada aleatoriamente
+  // mas que sempre será a mesma cor para o mesmo nome (determinístico).
   // ============================================================================
   function Avatar({
     name,
@@ -563,7 +619,7 @@ export default function Home() {
     const colors = [
       'bg-emerald-700', 'bg-blue-700', 'bg-purple-700', 'bg-rose-700', 'bg-amber-700', 'bg-cyan-700'
     ];
-    // Sorteio determinístico de cor baseado na letra do nome
+    // Sorteio de cor baseado no código da letra
     const colorIndex = initial.charCodeAt(0) % colors.length; 
 
     return (
@@ -576,18 +632,18 @@ export default function Home() {
   }
 
   // ============================================================================
-  // FUNÇÃO RECURSIVA: Renderizar Comentários em Árvore
-  // Essa função se chama a si mesma para renderizar "respostas das respostas", 
-  // criando aquela estrutura visual identada (para a direita) típica do Reddit.
+  // FUNÇÃO RECURSIVA: renderComments (Renderizar Comentários em Árvore)
+  // Função: Essa função se chama a si mesma para renderizar "respostas das respostas", 
+  // criando a estrutura visual identada (empurrada para a direita na tela).
   // ============================================================================
   function renderComments(
     postId: string,
     allComments: CommentItem[],
     postAuthor: string,
     parentId: string | null = null,
-    depth: number = 0 // Controla a margem esquerda (indentação)
+    depth: number = 0 // Controla a margem esquerda (indentação). Quanto maior o depth, mais pra direita.
   ) {
-    // Pega apenas os comentários que pertencem ao "pai" atual
+    // Filtra apenas os comentários que pertencem ao "pai" atual no ciclo da recursividade
     const list = allComments.filter((c) => (parentId ? c.parent_id === parentId : !c.parent_id));
     if (!list || list.length === 0) return null;
 
@@ -681,8 +737,7 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  // 2. USO DO FORMATADOR NOS COMENTÁRIOS
-                  // O componente processa texto puro transformando-o em links reais ou vídeos
+                  // USO DO FORMATADOR NOS COMENTÁRIOS: Processa links/vídeos do YouTube
                   <div className="mb-2">
                     <FormatadorTexto texto={c.content} />
                   </div>
@@ -728,7 +783,7 @@ export default function Home() {
                         setReplyTarget(null);
                       } else {
                         setReplyTarget({ postId, commentId: c.id, replyToName: c.author_name || 'Anônimo' });
-                        // Preenche automaticamente o "@nome" ao responder
+                        // Preenche automaticamente o "@nome" do usuário respondido
                         setCommentText(`@${c.author_name?.replace(/^@/, '') || 'Anônimo'} `); 
                       }
                     }}
@@ -738,7 +793,7 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Caixa de Resposta (Aparece ao clicar em "Responder") */}
+                {/* Caixa de Resposta para Comentários (Aparece ao clicar em "Responder") */}
                 {isReplyingToThisComment && (
                   <div className="mt-3 p-3 bg-neutral-950 rounded-lg border border-neutral-800 space-y-2">
                     {currentUser ? (
@@ -798,7 +853,7 @@ export default function Home() {
                   </button>
                 )}
 
-                {/* CHAMADA RECURSIVA: Renderiza as respostas deste comentário aumentando o recuo (depth) */}
+                {/* CHAMADA RECURSIVA: Renderiza as respostas destas respostas aumentando a profundidade (depth + 1) */}
                 {!isHidden && renderComments(postId, allComments, postAuthor, c.id, depth + 1)}
               </div>
             </div>
@@ -810,6 +865,7 @@ export default function Home() {
 
   // ============================================================================
   // RENDERIZAÇÃO FINAL (JSX da Página)
+  // Onde o HTML ganha vida
   // ============================================================================
   return (
     <main className="min-h-screen bg-neutral-950 text-neutral-100 p-4 sm:p-6 max-w-4xl mx-auto relative">
@@ -821,7 +877,7 @@ export default function Home() {
           <p className="text-sm text-neutral-400">Ideias e comunidades que crescem juntas.</p>
         </div>
 
-        {/* Menu Superior (Perfil e Botão Criar) */}
+        {/* Menu Superior (Perfil e Botão Criar Discussão) */}
         <div className="flex items-center gap-3 relative">
           {currentUser ? (
             <div className="flex items-center gap-2.5 bg-neutral-900 border border-neutral-800 py-1.5 px-3 rounded-xl">
@@ -857,7 +913,7 @@ export default function Home() {
                 Sair
               </button>
 
-              {/* Seletor de Emojis */}
+              {/* Módulo Seletor de Emojis */}
               {showEmojiPicker && (
                 <div className="absolute right-0 top-12 z-50 w-64 bg-neutral-900 border border-neutral-800 rounded-2xl p-3 shadow-2xl space-y-2">
                   <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
@@ -980,6 +1036,8 @@ export default function Home() {
               filteredPosts.map((post: any) => {
                 const totalComments = post.comments?.length || 0;
                 const isEditingPost = editingPostId === post.id;
+                
+                // Variável crucial: Autoriza ou bloqueia a exibição dos botões de edição de tópico
                 const userCanEditPost = isAuthorLoggedIn(post.author_name);
                 
                 // Verifica se a caixa de resposta que deve aparecer está vinculada a este tópico principal
@@ -988,46 +1046,30 @@ export default function Home() {
                 return (
                   <article key={post.id} className="p-6 rounded-2xl bg-neutral-900/90 border border-neutral-800 shadow-md">
                     
-                    {/* Cabeçalho do Tópico (Badge Categoria, Data, Edição/Exclusão) */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">
-                        {post.communities?.name || 'Geral'}
-                      </span>
-                      
+                    {/* CABEÇALHO DO TÓPICO: Mostra Avatar, Nome e Data */}
+                    <div className="flex flex-wrap items-center justify-between mb-4 pb-4 border-b border-neutral-800/50 gap-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-neutral-500">
-                          <ClientDate dateString={post.created_at} />
-                        </span>
-
-                        {userCanEditPost && !isEditingPost && (
-                          <div className="flex items-center gap-2 text-xs text-neutral-400">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingPostId(post.id);
-                                setEditPostTitle(post.title);
-                                setEditPostContent(post.content);
-                              }}
-                              className="hover:text-amber-400 transition underline underline-offset-2"
-                              title="Editar este tópico"
-                            >
-                              Editar
-                            </button>
-                            <span>•</span>
-                            <button
-                              type="button"
-                              onClick={() => handleDeletePost(post.id)}
-                              className="hover:text-rose-400 transition underline underline-offset-2"
-                              title="Excluir este tópico"
-                            >
-                              Excluir
-                            </button>
-                          </div>
-                        )}
+                        <Avatar
+                          name={post.author_name || 'Anônimo'}
+                          size="w-10 h-10"
+                          fontSize="text-sm"
+                        />
+                        <div>
+                          <span className="text-sm font-bold text-neutral-200 block">
+                            {post.author_name || 'Anônimo'}
+                          </span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 mt-1 inline-block uppercase tracking-wider">
+                            {post.communities?.name || 'Geral'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-neutral-500">
+                        <ClientDate dateString={post.created_at} />
                       </div>
                     </div>
 
-                    {/* Conteúdo do Tópico (Edição vs Visualização) */}
+                    {/* CONTEÚDO DO TÓPICO: Controle entre Modo Edição vs Modo Visualização */}
                     {isEditingPost ? (
                       <div className="space-y-3 my-3 p-4 bg-neutral-950 border border-amber-600/40 rounded-xl">
                         <div>
@@ -1068,15 +1110,13 @@ export default function Home() {
                     ) : (
                       <>
                         <h3 className="text-xl font-bold text-neutral-100 tracking-tight">{post.title}</h3>
-                        
-                        {/* 3. USO DO FORMATADOR NO CONTEÚDO PRINCIPAL DO TÓPICO */}
                         <div className="mt-2">
                           <FormatadorTexto texto={post.content} />
                         </div>
                       </>
                     )}
 
-                    {/* Ações Inferiores do Tópico (Curtir, Comentar, Compartilhar) */}
+                    {/* AÇÕES INFERIORES DO TÓPICO: Botões interativos da barra base */}
                     <div className="flex flex-wrap items-center gap-2 pt-4 mt-5 border-t border-neutral-800">
                       <button
                         type="button"
@@ -1119,17 +1159,45 @@ export default function Home() {
                         <span>{totalComments > 0 ? `Respostas (${totalComments})` : 'Responder'}</span>
                       </button>
 
+                      {/* BOTÕES DE AUTOR: Aparecem aqui embaixo junto dos botões sociais */}
+                      {userCanEditPost && !isEditingPost && (
+                        <>
+                          <div className="w-px h-4 bg-neutral-800 mx-1 hidden sm:block"></div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPostId(post.id);
+                              setEditPostTitle(post.title);
+                              setEditPostContent(post.content);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-transparent hover:border-amber-900/50 text-xs font-medium text-neutral-400 hover:text-amber-400 hover:bg-amber-950/30 transition"
+                          >
+                            <span>✏️</span>
+                            <span className="hidden sm:inline">Editar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePost(post.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-transparent hover:border-rose-900/50 text-xs font-medium text-neutral-400 hover:text-rose-400 hover:bg-rose-950/30 transition"
+                          >
+                            <span>🗑️</span>
+                            <span className="hidden sm:inline">Excluir</span>
+                          </button>
+                        </>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => handleShare(`/topico/${post.id}`, post.title)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-950 border border-neutral-800 hover:border-neutral-700 text-xs font-medium text-neutral-300 transition ml-auto"
                       >
                         <span>🔗</span>
-                        <span>{copiedId === `/topico/${post.id}` ? 'Copiado!' : 'Compartilhar'}</span>
+                        <span className="hidden sm:inline">{copiedId === `/topico/${post.id}` ? 'Copiado!' : 'Compartilhar'}</span>
                       </button>
                     </div>
 
-                    {/* Caixa de Comentário para o Tópico Principal */}
+                    {/* CAIXA DE CONVERSA PRINCIPAL: Aparece ao clicar em "Responder" no tópico */}
                     {isReplyingToThisPost && (
                       <div className="mt-4 p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-3">
                         {currentUser ? (
@@ -1179,13 +1247,13 @@ export default function Home() {
                       </div>
                     )}
 
-                    {/* Renderiza todos os comentários atrelados a este tópico principal */}
+                    {/* BLOCO DE COMENTÁRIOS DA POSTAGEM: Insere os filhos deste post */}
                     {renderComments(post.id, post.comments || [], post.author_name || 'Anônimo')}
                   </article>
                 );
               })
             ) : (
-              // Caso nenhum tópico exista ou nenhum seja encontrado na busca
+              // TELA VAZIA
               <div className="p-8 text-center rounded-xl bg-neutral-900/40 border border-neutral-800/60">
                 <p className="text-neutral-400 text-sm">
                   {searchTerm
