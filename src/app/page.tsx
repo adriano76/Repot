@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
+// 1. IMPORTAMOS O FORMATADOR AQUI NO TOPO
+import FormatadorTexto from '@/components/FormatadorTexto';
+
 interface CommentItem {
   id: string;
   post_id: string;
@@ -609,9 +612,10 @@ export default function Home() {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-neutral-200 leading-relaxed whitespace-pre-line mb-2">
-                    {c.content}
-                  </p>
+                  // 2. USO DO FORMATADOR NOS COMENTÁRIOS
+                  <div className="mb-2">
+                    <FormatadorTexto texto={c.content} />
+                  </div>
                 )}
 
                 <div className="flex items-center gap-3.5 text-neutral-400 text-xs">
@@ -977,9 +981,11 @@ export default function Home() {
                     ) : (
                       <>
                         <h3 className="text-xl font-bold text-neutral-100 tracking-tight">{post.title}</h3>
-                        <p className="text-neutral-300 text-sm mt-2 whitespace-pre-line leading-relaxed">
-                          {post.content}
-                        </p>
+                        
+                        {/* 3. USO DO FORMATADOR NO CONTEÚDO PRINCIPAL DO TÓPICO */}
+                        <div className="mt-2">
+                          <FormatadorTexto texto={post.content} />
+                        </div>
                       </>
                     )}
 
