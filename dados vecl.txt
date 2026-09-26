@@ -1,0 +1,28 @@
+Name	API Key	
+default
+No description
+sb_publishable_jm3mPR-5srnGe_4GTo19RQ_1V6JX2tv
+
+
+Publishable keys can be safely shared publicly
+
+
+
+
+Secret keys
+These API keys allow privileged access to your project's APIs. Use in servers, functions, workers or other backend components of your application.
+
+
+New secret key
+Name	API Key	
+default
+No description
+sb_secret_N2Y8o
+5gkSy4j-rWoAst0aw_LC8nC4Pm
+
+
+https://iewdmkkmbnvwoksgkwsh.supabase.co
+https://iewdmkkmbnvwoksgkwsh.supabase.co
+
+
+
